@@ -8,19 +8,35 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-
 io.on('connection', (socket) => {
-    socket.broadcast.emit('chat message', '님이 접속하였습니다...');
+    socket.on('setNickname', (nick) => {
+        socket.nickname = nick;
+        io.emit('chat message', nick + ' 님이 접속하였습니다.');
+    });
 
-    socket.on('chat message', (msg) => {
-        io.emit('chat massage', msg);
+    socket.on('chat message', function (msg) {
+        if (socket.nickname !== '') {
+            socket.broadcast.emit('typing', '');
+            io.emit('chat message', socket.nickname + ': ' + msg);
+        }
     });
 
     socket.on('disconnect', function () {
-        socket.broadcast.emit('chat message', '님이 도망갔습니다...');
-    })
+        if (socket.nickname) {
+            io.emit('chat message', socket.nickname + ' 님이 도망갔습니다...');
+        }
+    });
+
+    socket.on('typing', function (msg) {
+        if (socket.nickname && msg !== '') {
+            socket.broadcast.emit('typing', msg + ' 님이 채팅을 입력중입니다...');
+        }
+    });
 });
 
+
+
+
 http.listen(3000, function () {
-    console.log('listening on*: 3000');
+    console.log('listening on *:3000');
 });
