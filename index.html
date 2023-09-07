@@ -72,11 +72,8 @@
   <form id="message-form">
     <input id="m" autocomplete="off" disabled /><button>보내기</button>
   </form>
-  <!-- 닉네임 form -->
-  <input id="nick" placeholder="Enter your name" />
+  <input id="nick" placeholder="닉네임 입력" />
   <button id="set-nickname">닉네임 설정</button>
-
-  <div id="typing"></div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
@@ -85,6 +82,7 @@
     $(function () {
       var socket = io();
       var nickname = '';
+      var matched = false;
 
       $('#set-nickname').click(function () {
         if (!nickname) {
@@ -92,35 +90,31 @@
           if (inputNickname !== '') {
             nickname = inputNickname;
             socket.emit('setNickname', nickname);
-            $('#nick').prop('disabled', true); // 닉네임 입력 필드 비활성화
-            $('#set-nickname').prop('disabled', true); // 닉네임 설정 버튼 비활성화
-            $('#m').prop('disabled', false); // 메시지 입력 필드 활성화
+            $('#nick').prop('disabled', true);
+            $('#set-nickname').prop('disabled', true);
           }
         }
       });
 
-
       $('form').submit(function (e) {
         e.preventDefault();
-        if (nickname) {
-          socket.emit('chat message', $('#m').val());
+        if (nickname && matched) {
+          var message = $('#m').val();
+          socket.emit('chat message', message);
           $('#m').val('');
         }
         return false;
       });
 
-
       socket.on('chat message', function (msg) {
         $('#messages').append($('<li>').text(msg));
       });
 
-      socket.on('typing', function (msg) {
-        $('#typing').text(msg);
-      });
-
-      $('#m').on('keyup', function (e) {
-        if (e.target.value) {
-          socket.emit('typing', nickname);
+      // 랜덤 사용자와 매칭되었을 때
+      socket.on('chat message', function (msg) {
+        if (msg.includes('랜덤 사용자와 매칭되었습니다.')) {
+          matched = true;
+          $('#m').prop('disabled', false);
         }
       });
     });
