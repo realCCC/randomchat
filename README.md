@@ -14,3 +14,8 @@
 - Socket.io
 - Express.js
 - HTML, CSS, JavaScript
+
+## 추후 사용할 기능 및 기술
+
+- React기술 적용
+- 서버 배포
